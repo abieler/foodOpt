@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_foodOptimizer2.ui'
 #
-# Created: Sun Mar 23 12:32:19 2014
+# Created: Fri Mar 28 12:11:29 2014
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -12,7 +12,7 @@ from PySide import QtCore, QtGui
 class Ui_Form(object):
     def setupUi(self, Form):
         Form.setObjectName("Form")
-        Form.resize(1038, 677)
+        Form.resize(1107, 677)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)

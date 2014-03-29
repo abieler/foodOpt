@@ -14,6 +14,9 @@ from pyswarm_2 import apsa
 import ui_foodOptimizer
         
 class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
+    message1 = QTC.Signal(int)
+
+
     def __init__(self, parent = None):
         super(Window, self).__init__(parent)
         self.setupUi(self)
@@ -25,16 +28,19 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
         self.connect(self.tableWidget_userSelection,QTC.SIGNAL("cellChanged(int, int)"), self.modifyCellClicked)
         self.connect(self.lineEdit_search,QTC.SIGNAL("textChanged(const QString&)"), self.search)
         
+        self.message1.connect(self.updateProgressBar, QTC.Qt.QueuedConnection)
+        
         
         self.x0 = False
         self.optimizer_thread = Optimizer()
+        self.optimizer_thread.message.connect(self.plotOptimizedResult, QTC.Qt.QueuedConnection)
+        self.set_language_env()
         
         #######################################################
         # create overview table
         ########################################################
-        self.db = sqlite3.connect('SwissFoodCompDataV50.sqlite')
-        self.cur = self.db.cursor()
         
+        self.db, self.cur = self.setupDB()
         self.cur.execute("SELECT NAME_%s FROM naerwerte ORDER BY NAME_%s" % (self.language, self.language))
         data = self.cur.fetchall()
         self.setupView(data)
@@ -44,7 +50,7 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
         # create user selection table
         ########################################################
         self.tableWidget_userSelection.setColumnCount(5)
-        self.tableWidget_userSelection.setHorizontalHeaderLabels([ 'Name', 'minimum [ g / ml ]', 'maximum [ g / ml ]', 'optimal','remove'])
+        self.tableWidget_userSelection.setHorizontalHeaderLabels([ 'Name', 'min [g]', 'max [g]', 'optimal','remove'])
             
             
         ###############################################################
@@ -65,7 +71,24 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
             
         self.getIdealValues()
         self.updateViewGraph()
-            
+        
+        
+    def setupDB(self):
+        db = sqlite3.connect('SwissFoodCompDataV50.sqlite')
+        cur = db.cursor()
+        
+        return db,cur
+
+
+    def set_language_env(self):
+            if self.language == 'D':
+                self.pltTitle = '% des Bedarfs'
+                self.pltXticks = ['kcal', 'Fett', 'Protein', 'Na', 'vitA', 'vitB12', 'Zucker']
+            elif self.language == 'E':
+                self.pltTitle = '% of needed amount'
+                self.pltXticks = ['kcal','fat','protein','sodium','vitA','vitB12', 'sugar']
+
+
     def getIdealValues(self):
         
         if self.radioButton_singleMeal.isChecked():
@@ -81,7 +104,8 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
         self.fatIdeal = 60 * N
         self.vitAIdeal = 1 * N
         self.B12Ideal = 3.0 * N
-        self.sodiumIdeal = 2300 * N
+        self.sodiumIdeal = 2000 * N
+        self.sugarIdeal = 55 * N
             
     def updateViewGraph(self):
         self.getIdealValues()
@@ -93,6 +117,7 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
                             self.sodiumMin / self.sodiumIdeal,
                             self.vit_aMin / self.vitAIdeal,
                             self.b12Min / self.B12Ideal,
+                            self.sugarMin / self.sugarIdeal
                         ]) * 100
             
             finalResultMax = np.array([
@@ -102,6 +127,7 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
                             self.sodiumMax / self.sodiumIdeal,
                             self.vit_aMax / self.vitAIdeal,
                             self.b12Max / self.B12Ideal,
+                            self.sugarMax / self.sugarIdeal
                         ]) * 100
             
             finalResultOpt = np.array([
@@ -111,12 +137,13 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
                             self.sodiumOpt / self.sodiumIdeal,
                             self.vit_aOpt / self.vitAIdeal,
                             self.b12Opt / self.B12Ideal,
+                            self.sugarOpt / self.sugarIdeal
                         ]) * 100
         except Exception, e:
             print 'Error plotting 1:'
             print e
         try:
-            indices = np.arange(6)
+            indices = np.arange(7)
         except:
             pass
         width1 = 0.5
@@ -149,19 +176,23 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
         except:
             pass
         try:
-            self.mpl_widget.ax.set_xticklabels(['kcal','fat','protein','sodium','vitA','vitB12'])
+            #self.mpl_widget.ax.set_xticklabels(['kcal','fat','protein','sodium','vitA','vitB12', 'sugar'])
+            self.mpl_widget.ax.set_xticklabels(self.pltXticks)
         except:
             pass
+            
+        self.mpl_widget.ax.set_title(self.pltTitle)
         self.mpl_widget.draw()
-        
-    
-    def plotOptimizedResult(self,x):
-        
+
+
+    def plotOptimizedResult(self,msg):
+
+        x = self.xopt
         self.fatOpt, self.proteinOpt, self.energy_kcaOpt,self.charbohydrOpt,self.charbohydr2Opt,self.sugarOpt,self.sodiumOpt,self.vit_aOpt,self.b1Opt,self.b2Opt,self.b6Opt,self.b12Opt = 0,0,0,0,0,0,0,0,0,0,0,0
         nrOfRows = self.tableWidget_userSelection.rowCount()
         for k in range(nrOfRows):
             itemName = self.tableWidget_userSelection.item(k,0).text()
-            fat_i, protein_i, energy_kca_i,charbohydr_i,charbohydr2_i,sugar_i,sodium_i,vit_a_i,b1_i,b2_i,b6_i,b12_i = self.getFoodInformation(itemName)
+            fat_i, protein_i, energy_kca_i,charbohydr_i,charbohydr2_i,sugar_i,sodium_i,vit_a_i,b1_i,b2_i,b6_i,b12_i = self.getFoodInformation(itemName,self.cur)
             
             optAmount = x[k]
             foodItem = QTG.QTableWidgetItem()
@@ -183,7 +214,6 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
             self.b12Opt += b12_i* optAmount / 100
             
         self.modifyCellClicked(0,0)
-            
 
     def modifyCellClicked(self,i,j):
         
@@ -192,7 +222,7 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
         nrOfRows = self.tableWidget_userSelection.rowCount()
         for k in range(nrOfRows):
             itemName = self.tableWidget_userSelection.item(k,0).text()
-            fat_i, protein_i, energy_kca_i,charbohydr_i,charbohydr2_i,sugar_i,sodium_i,vit_a_i,b1_i,b2_i,b6_i,b12_i = self.getFoodInformation(itemName)
+            fat_i, protein_i, energy_kca_i,charbohydr_i,charbohydr2_i,sugar_i,sodium_i,vit_a_i,b1_i,b2_i,b6_i,b12_i = self.getFoodInformation(itemName,self.cur)
             try:
                 minAmount = self.tableWidget_userSelection.item(k,1).text()
                 minAmount = np.float(minAmount)
@@ -239,11 +269,11 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
             
         self.updateViewGraph()
             
-    def getFoodInformation(self,itemName):
+    def getFoodInformation(self,itemName,cur):
         query = 'SELECT PROTEIN, FAT, ENERGY_KCA, CHARBOHYDR, CHARBOHYD2, SUGAR, SODIUM, VIT_A, B1, B2, B6, B12 FROM naerwerte WHERE NAME_%s LIKE "%%%s%%"' % (self.language, itemName)
         #print query
-        self.cur.execute(query)
-        data = self.cur.fetchall()
+        cur.execute(query)
+        data = cur.fetchall()
         PROTEIN, FAT, ENERGY_KCA, CHARBOHYDR, CHARBOHYD2, SUGAR, SODIUM, VIT_A, B1, B2, B6, B12 = data[0]
         
         return PROTEIN, FAT, ENERGY_KCA, CHARBOHYDR, CHARBOHYD2, SUGAR, SODIUM, VIT_A, B1, B2, B6, B12
@@ -287,12 +317,6 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
             foodItem.setFlags(QTC.Qt.ItemIsEnabled)
             foodItem.setText(d[0].strip().replace('"',''))
             self.tableWidget_overview.setItem(i,0, foodItem )
-            '''
-            selectItem = QTG.QTableWidgetItem()
-            selectItem.setFlags(QTC.Qt.ItemIsEnabled)
-            selectItem.setText('add item')
-            self.tableWidget_overview.setItem(i,1,selectItem)
-            '''
             
         if init == 1:
            self.tableWidget_overview.resizeColumnsToContents()
@@ -351,7 +375,16 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
         plt.grid(True)
         plt.show()
         
+    def updateProgressBar(self, finished):
+        #print 'finished:', finished
+        self.progress.setValue(int(finished))
+        
+        
     def func(self,x, iteration, particleNr,additionalData):
+        
+        
+        if iteration % (self.optimizer_thread.maxIterations / 50) == 0:
+            self.message1.emit(iteration / 1000 * 100)
         
         PROTEIN = np.sum(additionalData[:,0] * x / 100)
         FAT = np.sum(additionalData[:,1] * x / 100)
@@ -383,81 +416,86 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
             
         sodium_score = (self.sodiumIdeal - SODIUM)**2 + 1
         
-        print 'energy  :', ENERGY_KCA, 'of',self.kcalIdeal
-        print 'protein :', PROTEIN, 'of', self.proteinIdeal
-        print 'fat     :', FAT, 'of', self.fatIdeal
-        print 'vit A   :',VIT_A, 'of', self.vitAIdeal
-        print 'vit B12 :',B12, 'of', self.B12Ideal
-        print 'sodium :',SODIUM, 'of', self.sodiumIdeal
-        print '********************************'
-        score = energy_score * protein_score * fat_score * vitA_score * vitB12_score * sodium_score
+        if (self.sugarIdeal - SUGAR) < 0:
+            sugar_score = (self.sodiumIdeal - SODIUM)**2 + 1
+        else:
+            sugar_score = 1
+
+        score = energy_score * protein_score * fat_score * vitA_score * vitB12_score * sodium_score * sugar_score
         
         return score
-    
 
 
     def startOptimization(self):
-        if self.radioButton_singleMeal.isChecked():
-            N = 1/3.0
-        elif self.radioButton_oneDay.isChecked():
+
+        self.progress = QTG.QProgressDialog("Optimizing...", "OK", 0, 100, self)
+        self.progress.setModal(True)
+        self.progress.show()
+
+        self.optimizer_thread.start()
+ 
+ 
+class Optimizer(QTC.QThread):
+    message = QTC.Signal(str)
+
+
+    def __init__(self, parent = None):
+        QTC.QThread.__init__(self,parent)
+        self.signal = QTC.SIGNAL("signal")
+ 
+ 
+    def run(self):
+
+        db,cur = window.setupDB()
+        
+        if window.radioButton_singleMeal.isChecked():
+            N = 1 / 3.0
+        elif window.radioButton_oneDay.isChecked():
             N = 1
-        elif self.radioButton_sevenMeals.isChecked():
+        elif window.radioButton_sevenMeals.isChecked():
             N = 7
-            
-        
-        self.kcalIdeal = 2000 * N
-        self.proteinIdeal = 59 * N
-        self.fatIdeal = 60 * N
-        self.vitAIdeal = 1 * N
-        self.B12Ideal = 3.0 * N
-        self.sodiumIdeal = 550 * N
-        
-        
+
+        window.kcalIdeal = 2000 * N
+        window.proteinIdeal = 59 * N
+        window.fatIdeal = 60 * N
+        window.vitAIdeal = 1 * N
+        window.B12Ideal = 3.0 * N
+        window.sodiumIdeal = 550 * N
+
         additionalData = []
         x0 = []
         xmin = []
         xmax = []
-        nrOfItems = self.tableWidget_userSelection.rowCount()
+        nrOfItems = window.tableWidget_userSelection.rowCount()
         for i in range(nrOfItems):
-            itemName =  self.tableWidget_userSelection.item(i,0).text()
-            
-            additionalData.append(self.getFoodInformation(itemName))
-            xmin.append(np.float(self.tableWidget_userSelection.item(i,1).text()))
-            xmax.append(np.float(self.tableWidget_userSelection.item(i,2).text()))
-            
+            itemName =  window.tableWidget_userSelection.item(i,0).text()
+            additionalData.append(window.getFoodInformation(itemName,cur))
+            xmin.append(np.float(window.tableWidget_userSelection.item(i,1).text()))
+            xmax.append(np.float(window.tableWidget_userSelection.item(i,2).text()))
+
+        db.close()
         xmin = np.array(xmin)
         xmax = np.array(xmax)
         
-        if self.x0 and (len(self.x0) == len(xmin)):
-            x0 = self.x0
+        if window.x0 and (len(window.x0) == len(xmin)):
+            x0 = window.x0
         else:
             x0 = xmin + (xmax - xmin)/2
         dx = (xmax - xmin)/2
             
         additionalData = np.array(additionalData)
         
-        fopt, xopt = apsa(self.func, x0,dx,xmin,xmax,20,1000,additional_data = additionalData)
+        self.maxIterations = 1000
+        
+        fopt, xopt = apsa(window.func, x0,dx,xmin,xmax,20,self.maxIterations,additional_data = additionalData)
         print fopt, xopt
+
+        window.x0 = xopt
+        window.xopt = xopt
+        self.message.emit("blaaaa")
         
-        self.x0 = xopt
         
         
-        self.plotOptimizedResult(xopt)
-        #self.computeResults(xopt,additionalData)
-        
- 
-class Optimizer(QTC.QThread):
-     
-    def __init__(self, parent = None):
-        QTC.QThread.__init__(self,parent)
-         
-    def renderer(self,remote=False, data=None):
-        self.remote = remote
-        self.data = data
-        self.start()
- 
-    def run(self):
-		pass
         
 app = QTG.QApplication(sys.argv)
 window = Window()
