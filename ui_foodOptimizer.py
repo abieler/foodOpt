@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_foodOptimizer.ui'
 #
-# Created: Sun Mar 30 16:04:31 2014
+# Created: Sun Mar 30 18:49:52 2014
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -143,14 +143,14 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushButton_search.setText(QtGui.QApplication.translate("MainWindow", "search", None, QtGui.QApplication.UnicodeUTF8))
-        self.radioButton_singleMeal.setText(QtGui.QApplication.translate("MainWindow", "Single Meal", None, QtGui.QApplication.UnicodeUTF8))
-        self.radioButton_oneDay.setText(QtGui.QApplication.translate("MainWindow", "1 Day", None, QtGui.QApplication.UnicodeUTF8))
-        self.radioButton_sevenDays.setText(QtGui.QApplication.translate("MainWindow", "7 Days", None, QtGui.QApplication.UnicodeUTF8))
-        self.pushButton_startOptimization.setText(QtGui.QApplication.translate("MainWindow", "Start Optimization", None, QtGui.QApplication.UnicodeUTF8))
+        self.pushButton_search.setText(QtGui.QApplication.translate("MainWindow", "suchen", None, QtGui.QApplication.UnicodeUTF8))
+        self.radioButton_singleMeal.setText(QtGui.QApplication.translate("MainWindow", "Einzelne Mahlzeit", None, QtGui.QApplication.UnicodeUTF8))
+        self.radioButton_oneDay.setText(QtGui.QApplication.translate("MainWindow", "1 Tag", None, QtGui.QApplication.UnicodeUTF8))
+        self.radioButton_sevenDays.setText(QtGui.QApplication.translate("MainWindow", "7 Tage", None, QtGui.QApplication.UnicodeUTF8))
+        self.pushButton_startOptimization.setText(QtGui.QApplication.translate("MainWindow", "Start Optimierung", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QtGui.QApplication.translate("MainWindow", "optimization", None, QtGui.QApplication.UnicodeUTF8))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), QtGui.QApplication.translate("MainWindow", "log", None, QtGui.QApplication.UnicodeUTF8))
         self.menuFile.setTitle(QtGui.QApplication.translate("MainWindow", "File", None, QtGui.QApplication.UnicodeUTF8))
-        self.menuHelp.setTitle(QtGui.QApplication.translate("MainWindow", "Help", None, QtGui.QApplication.UnicodeUTF8))
+        self.menuHelp.setTitle(QtGui.QApplication.translate("MainWindow", "Hilfe", None, QtGui.QApplication.UnicodeUTF8))
 
 from matplotlibwidget import MatplotlibWidget

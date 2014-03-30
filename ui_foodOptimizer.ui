@@ -70,7 +70,7 @@
                </size>
               </property>
               <property name="text">
-               <string>search</string>
+               <string>suchen</string>
               </property>
              </widget>
             </item>
@@ -166,7 +166,7 @@
                    <item>
                     <widget class="QRadioButton" name="radioButton_singleMeal">
                      <property name="text">
-                      <string>Single Meal</string>
+                      <string>Einzelne Mahlzeit</string>
                      </property>
                      <property name="checked">
                       <bool>true</bool>
@@ -176,14 +176,14 @@
                    <item>
                     <widget class="QRadioButton" name="radioButton_oneDay">
                      <property name="text">
-                      <string>1 Day</string>
+                      <string>1 Tag</string>
                      </property>
                     </widget>
                    </item>
                    <item>
                     <widget class="QRadioButton" name="radioButton_sevenDays">
                      <property name="text">
-                      <string>7 Days</string>
+                      <string>7 Tage</string>
                      </property>
                     </widget>
                    </item>
@@ -211,7 +211,7 @@
                     </size>
                    </property>
                    <property name="text">
-                    <string>Start Optimization</string>
+                    <string>Start Optimierung</string>
                    </property>
                   </widget>
                  </item>
@@ -251,7 +251,7 @@
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
-     <string>Help</string>
+     <string>Hilfe</string>
     </property>
    </widget>
    <addaction name="menuFile"/>

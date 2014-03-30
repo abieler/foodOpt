@@ -60,7 +60,7 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
         # create user selection table
         ########################################################
         self.tableWidget_userSelection.setColumnCount(5)
-        self.tableWidget_userSelection.setHorizontalHeaderLabels([ 'Name', 'min [g]', 'max [g]', 'optimal','remove'])
+        self.tableWidget_userSelection.setHorizontalHeaderLabels([ 'Name', 'min [g]', 'max [g]', 'optimal','entfernen'])
         self.tableWidget_userSelection.setColumnWidth(0, self.resolution.width()/3)
             
             
@@ -157,7 +157,6 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
         elif self.radioButton_sevenDays.isChecked():
             N = 7
             
-        
         self.kcalIdeal = 2000 * N
         self.proteinIdeal = 59 * N
         self.fatIdeal = 60 * N
@@ -215,36 +214,32 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
         self.mpl_widget.ax.plot(np.arange(-1,len(indices)+1), np.zeros(len(indices)+2),'-k')
         
         try:
-            self.mpl_widget.ax.bar(indices-width1/2, finalResultMax, width1, facecolor='#32A0DE')
+            self.mpl_widget.ax.bar(indices-width1/2, finalResultMax, width1, facecolor='#32A0DE',label='max')
         except Exception, e:
             pass
-            #print 'Error plotting 2:'
-            #print e
             
         try:
-            self.mpl_widget.ax.bar(indices-width2/2, finalResultMin, width2, facecolor='#1C2F39')
+            self.mpl_widget.ax.bar(indices-width2/2, finalResultMin, width2, facecolor='#1C2F39', label='min')
         except Exception, e:
             pass
-            #print 'Error plotting 3'
-            #print e
+
         try:
             self.mpl_widget.ax.plot(indices,finalResultOpt,'or', markersize=12)
         except Exception,e:
             pass
-            #print 'Error plotting 4'
-            #print e
+
         self.mpl_widget.ax.grid(True)
         try:
             self.mpl_widget.ax.set_xticks(indices)
         except:
             pass
         try:
-            #self.mpl_widget.ax.set_xticklabels(['kcal','fat','protein','sodium','vitA','vitB12', 'sugar'])
             self.mpl_widget.ax.set_xticklabels(self.pltXticks)
         except:
             pass
             
         self.mpl_widget.ax.set_title(self.pltTitle)
+        self.mpl_widget.ax.legend()
         self.mpl_widget.draw()
 
 
@@ -385,7 +380,7 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
             
             removeItem = QTG.QTableWidgetItem()
             removeItem.setFlags(QTC.Qt.ItemIsEnabled)
-            removeItem.setText('remove')
+            removeItem.setText('entfernen')
             self.tableWidget_userSelection.setItem(nrOfRows,4, removeItem )
 
     
@@ -486,7 +481,7 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
         
         energy_score = (self.kcalIdeal - ENERGY_KCA)**2 + 1
         protein_score = (PROTEIN - self.proteinIdeal)**2 + 1
-        fat_score = (self.fatIdeal- FAT)**2 + 1
+        fat_score = (self.fatIdeal - FAT)**2 + 1
         
         if (self.vitAIdeal < VIT_A):
             vitA_score = (self.vitAIdeal - VIT_A)**2 + 1
@@ -498,7 +493,7 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
         else:
             vitB12_score = abs(self.B12Ideal - B12)**2 + 1
         
-        if (self.sodiumIdeal > SODIUM):
+        if (self.sodiumIdeal < SODIUM):
             sodium_score = (self.sodiumIdeal - SODIUM)**2 + 1
         else:
             sodium_score = abs(self.sodiumIdeal - SODIUM)**2 + 1
@@ -509,7 +504,7 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
             sugar_score = abs(self.sugarIdeal - SUGAR)**2 + 1
 
         score = energy_score * protein_score * fat_score * vitA_score * vitB12_score * sodium_score * sugar_score
-        
+        print score, SODIUM, self.sodiumIdeal
         return score
 
 
@@ -534,20 +529,6 @@ class Optimizer(QTC.QThread):
     def run(self):
 
         db,cur = window.setupDB()
-
-        if window.radioButton_singleMeal.isChecked():
-            N = 1 / 3.0
-        elif window.radioButton_oneDay.isChecked():
-            N = 1
-        elif window.radioButton_sevenMeals.isChecked():
-            N = 7
-
-        window.kcalIdeal = 2000 * N
-        window.proteinIdeal = 59 * N
-        window.fatIdeal = 60 * N
-        window.vitAIdeal = 1 * N
-        window.B12Ideal = 3.0 * N
-        window.sodiumIdeal = 550 * N
 
         additionalData = []
         x0 = []
