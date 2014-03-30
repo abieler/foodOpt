@@ -4,32 +4,43 @@ import sys
 import sqlite3
 import os, sys
 import numpy as np
-import matplotlib.pyplot as plt
 import matplotlib
+import matplotlib.pyplot as plt
+
 
 from PySide import QtCore as QTC
 from PySide import QtGui as QTG
 
 from pyswarm_2 import apsa
+#import ui_foodOptimizer
 import ui_foodOptimizer
         
-class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
+#class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
+class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
     message1 = QTC.Signal(int)
 
 
     def __init__(self, parent = None):
         super(Window, self).__init__(parent)
         self.setupUi(self)
+        
+        self.resolution = QTG.QDesktopWidget().screenGeometry()
+        
         self.language = 'D'
         self.connect(self.pushButton_search, QTC.SIGNAL("clicked()"), self.search)
         self.connect(self.pushButton_startOptimization, QTC.SIGNAL("clicked()"), self.startOptimization)
         self.connect(self.tableWidget_overview,QTC.SIGNAL("cellClicked(int, int)"), self.addItemClicked)
         self.connect(self.tableWidget_userSelection,QTC.SIGNAL("cellClicked(int, int)"), self.removeItemClicked)
         self.connect(self.tableWidget_userSelection,QTC.SIGNAL("cellChanged(int, int)"), self.modifyCellClicked)
+        #self.connect(self.tableWidget_userSelection,QTC.SIGNAL("cellActivated(int, int)"), self.modifyCellClicked)
         self.connect(self.lineEdit_search,QTC.SIGNAL("textChanged(const QString&)"), self.search)
         
         self.message1.connect(self.updateProgressBar, QTC.Qt.QueuedConnection)
+        self.add_menu_options()
         
+        
+        self.connect(self.tableWidget_overview.horizontalHeader(),QTC.SIGNAL("sectionResized(int, int, int)"),
+                    self.tableWidget_overview, QTC.SLOT("resizeRowsToContents()"))
         
         self.x0 = False
         self.optimizer_thread = Optimizer()
@@ -43,7 +54,7 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
         self.db, self.cur = self.setupDB()
         self.cur.execute("SELECT NAME_%s FROM naerwerte ORDER BY NAME_%s" % (self.language, self.language))
         data = self.cur.fetchall()
-        self.setupView(data)
+        self.setupView(data,1)
         
         
         #######################################################
@@ -51,6 +62,7 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
         ########################################################
         self.tableWidget_userSelection.setColumnCount(5)
         self.tableWidget_userSelection.setHorizontalHeaderLabels([ 'Name', 'min [g]', 'max [g]', 'optimal','remove'])
+        self.tableWidget_userSelection.setColumnWidth(0, self.resolution.width()/3)
             
             
         ###############################################################
@@ -72,7 +84,55 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
         self.getIdealValues()
         self.updateViewGraph()
         
+    def add_menu_options(self):
         
+        self.menuFile.addAction('save data',self.save_clicked)
+        self.menuFile.addAction('load data', self.load_clicked)
+        self.menuFile.addAction('settings...', self.settings_clicked)
+        
+        
+    def settings_clicked(self):
+        print 'preferences clicked'
+
+
+    def save_clicked(self):
+        print 'save clicked'
+        saveName = QTG.QInputDialog.getText(self, 'save', self.tr("save as:"))
+        print saveName[0]
+        
+        nrOfRows = self.tableWidget_userSelection.rowCount()
+        for i in range(nrOfRows):
+            foodItem = self.tableWidget_userSelection.item(i,0).text()
+            userMin = np.float(self.tableWidget_userSelection.item(i,1).text())
+            userMax = np.float(self.tableWidget_userSelection.item(i,2).text())
+            try:
+                userOpt = np.float(self.tableWidget_userSelection.item(i,3).text())
+            except:
+                userOpt = 0.0
+            self.cur.execute('INSERT INTO saved_menus VALUES("%s", "%s", %f, %f, %f)' %(str(saveName[0]), foodItem, userMin, userMax, userOpt))
+            
+        self.db.commit()
+        
+        
+    def load_clicked(self):
+        
+        self.cur.execute("SELECT savedName FROM saved_menus GROUP BY savedName")
+        data = self.cur.fetchall()
+        
+        items = [item[0] for item in data]
+        
+        for d in data:
+            print d
+        
+        loadName = QTG.QInputDialog.getItem(self, 'load', "load:", items, editable=False)[0]
+        print loadName
+        self.tableWidget_userSelection.setRowCount(0)
+        self.cur.execute('SELECT * FROM saved_menus WHERE savedName = "%s"' %loadName)
+        data = self.cur.fetchall()
+        for row in data:
+            print row
+            self.addItemClicked(0,0,True,row[1], str(row[2]), str(row[3]), str(row[4]))
+
     def setupDB(self):
         db = sqlite3.connect('SwissFoodCompDataV50.sqlite')
         cur = db.cursor()
@@ -140,8 +200,9 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
                             self.sugarOpt / self.sugarIdeal
                         ]) * 100
         except Exception, e:
-            print 'Error plotting 1:'
-            print e
+            pass
+            #print 'Error plotting 1:'
+            #print e
         try:
             indices = np.arange(7)
         except:
@@ -157,19 +218,22 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
         try:
             self.mpl_widget.ax.bar(indices-width1/2, finalResultMax, width1, facecolor='#32A0DE')
         except Exception, e:
-            print 'Error plotting 2:'
-            print e
+            pass
+            #print 'Error plotting 2:'
+            #print e
             
         try:
             self.mpl_widget.ax.bar(indices-width2/2, finalResultMin, width2, facecolor='#1C2F39')
         except Exception, e:
-            print 'Error plotting 3'
-            print e
+            pass
+            #print 'Error plotting 3'
+            #print e
         try:
             self.mpl_widget.ax.plot(indices,finalResultOpt,'or', markersize=12)
         except Exception,e:
-            print 'Error plotting 4'
-            print e
+            pass
+            #print 'Error plotting 4'
+            #print e
         self.mpl_widget.ax.grid(True)
         try:
             self.mpl_widget.ax.set_xticks(indices)
@@ -213,61 +277,62 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
             self.b6Opt += b6_i* optAmount / 100
             self.b12Opt += b12_i* optAmount / 100
             
-        self.modifyCellClicked(0,0)
+        self.modifyCellClicked(0,2)
 
     def modifyCellClicked(self,i,j):
         
-        self.fatMin, self.proteinMin, self.energy_kcaMin,self.charbohydrMin,self.charbohydr2Min,self.sugarMin,self.sodiumMin,self.vit_aMin,self.b1Min,self.b2Min,self.b6Min,self.b12Min = 0,0,0,0,0,0,0,0,0,0,0,0
-        self.fatMax, self.proteinMax, self.energy_kcaMax,self.charbohydrMax,self.charbohydr2Max,self.sugarMax,self.sodiumMax,self.vit_aMax,self.b1Max,self.b2Max,self.b6Max,self.b12Max = 0,0,0,0,0,0,0,0,0,0,0,0
-        nrOfRows = self.tableWidget_userSelection.rowCount()
-        for k in range(nrOfRows):
-            itemName = self.tableWidget_userSelection.item(k,0).text()
-            fat_i, protein_i, energy_kca_i,charbohydr_i,charbohydr2_i,sugar_i,sodium_i,vit_a_i,b1_i,b2_i,b6_i,b12_i = self.getFoodInformation(itemName,self.cur)
-            try:
-                minAmount = self.tableWidget_userSelection.item(k,1).text()
-                minAmount = np.float(minAmount)
-            except:
-                minAmount = 0
-            try:
-                maxAmount = self.tableWidget_userSelection.item(k,2).text()
-                maxAmount = np.float(maxAmount)
-            except:
-                maxAmount = 0
- 
-            try:
-                self.fatMin += fat_i * minAmount / 100
-                self.proteinMin += protein_i* minAmount / 100
-                self.energy_kcaMin += energy_kca_i* minAmount / 100
-                self.charbohydrMin += charbohydr_i* minAmount / 100
-                self.charbohydr2Min += charbohydr2_i* minAmount / 100
-                self.sugarMin += sugar_i* minAmount / 100
-                self.sodiumMin += sodium_i* minAmount / 100
-                self.vit_aMin += vit_a_i* minAmount / 10**5
-                self.b1Min += b1_i* minAmount / 100
-                self.b2Min += b2_i* minAmount / 100
-                self.b6Min += b6_i* minAmount / 100
-                self.b12Min += b12_i* minAmount / 100
-            except Exception, e:
-                print 'Error modifyCellClicked 1'
-                print e
-            try:
-                self.fatMax += fat_i * maxAmount / 100
-                self.proteinMax += protein_i* maxAmount / 100
-                self.energy_kcaMax += energy_kca_i* maxAmount / 100
-                self.charbohydrMax += charbohydr_i* maxAmount / 100
-                self.charbohydr2Max += charbohydr2_i* maxAmount / 100
-                self.sugarMax += sugar_i* maxAmount / 100
-                self.sodiumMax += sodium_i* maxAmount / 100
-                self.vit_aMax += vit_a_i* maxAmount / 10**5
-                self.b1Max += b1_i* maxAmount / 100
-                self.b2Max += b2_i* maxAmount / 100
-                self.b6Max += b6_i* maxAmount / 100
-                self.b12Max += b12_i* maxAmount / 100
-            except Exception, e:
-                print 'Error modifyCellClicked 2'
-                print e
-            
-        self.updateViewGraph()
+        if j == 2 and (len(self.tableWidget_userSelection.item(i,j).text()) > 0):
+            self.fatMin, self.proteinMin, self.energy_kcaMin,self.charbohydrMin,self.charbohydr2Min,self.sugarMin,self.sodiumMin,self.vit_aMin,self.b1Min,self.b2Min,self.b6Min,self.b12Min = 0,0,0,0,0,0,0,0,0,0,0,0
+            self.fatMax, self.proteinMax, self.energy_kcaMax,self.charbohydrMax,self.charbohydr2Max,self.sugarMax,self.sodiumMax,self.vit_aMax,self.b1Max,self.b2Max,self.b6Max,self.b12Max = 0,0,0,0,0,0,0,0,0,0,0,0
+            nrOfRows = self.tableWidget_userSelection.rowCount()
+            for k in range(nrOfRows):
+                itemName = self.tableWidget_userSelection.item(k,0).text()
+                fat_i, protein_i, energy_kca_i,charbohydr_i,charbohydr2_i,sugar_i,sodium_i,vit_a_i,b1_i,b2_i,b6_i,b12_i = self.getFoodInformation(itemName,self.cur)
+                try:
+                    minAmount = self.tableWidget_userSelection.item(k,1).text()
+                    minAmount = np.float(minAmount)
+                except:
+                    minAmount = 0
+                try:
+                    maxAmount = self.tableWidget_userSelection.item(k,2).text()
+                    maxAmount = np.float(maxAmount)
+                except:
+                    maxAmount = 0
+     
+                try:
+                    self.fatMin += fat_i * minAmount / 100
+                    self.proteinMin += protein_i* minAmount / 100
+                    self.energy_kcaMin += energy_kca_i* minAmount / 100
+                    self.charbohydrMin += charbohydr_i* minAmount / 100
+                    self.charbohydr2Min += charbohydr2_i* minAmount / 100
+                    self.sugarMin += sugar_i* minAmount / 100
+                    self.sodiumMin += sodium_i* minAmount / 100
+                    self.vit_aMin += vit_a_i* minAmount / 10**5
+                    self.b1Min += b1_i* minAmount / 100
+                    self.b2Min += b2_i* minAmount / 100
+                    self.b6Min += b6_i* minAmount / 100
+                    self.b12Min += b12_i* minAmount / 100
+                except Exception, e:
+                    print 'Error modifyCellClicked 1'
+                    print e
+                try:
+                    self.fatMax += fat_i * maxAmount / 100
+                    self.proteinMax += protein_i* maxAmount / 100
+                    self.energy_kcaMax += energy_kca_i* maxAmount / 100
+                    self.charbohydrMax += charbohydr_i* maxAmount / 100
+                    self.charbohydr2Max += charbohydr2_i* maxAmount / 100
+                    self.sugarMax += sugar_i* maxAmount / 100
+                    self.sodiumMax += sodium_i* maxAmount / 100
+                    self.vit_aMax += vit_a_i* maxAmount / 10**5
+                    self.b1Max += b1_i* maxAmount / 100
+                    self.b2Max += b2_i* maxAmount / 100
+                    self.b6Max += b6_i* maxAmount / 100
+                    self.b12Max += b12_i* maxAmount / 100
+                except Exception, e:
+                    print 'Error modifyCellClicked 2'
+                    print e
+                
+            self.updateViewGraph()
             
     def getFoodInformation(self,itemName,cur):
         query = 'SELECT PROTEIN, FAT, ENERGY_KCA, CHARBOHYDR, CHARBOHYD2, SUGAR, SODIUM, VIT_A, B1, B2, B6, B12 FROM naerwerte WHERE NAME_%s LIKE "%%%s%%"' % (self.language, itemName)
@@ -287,18 +352,37 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
             
         self.modifyCellClicked(0,0)
     
-    def addItemClicked(self,i,j):
+    def addItemClicked(self,i,j,loaded=False,foodItem=None, userMin=None, userMax=None, userOpt=None):
         
         if j == 0:
-            text = self.tableWidget_overview.item(i,0).text()
+            if not loaded:
+                text = self.tableWidget_overview.item(i,0).text()
+            else:
+                text = foodItem
+            
             nrOfRows = self.tableWidget_userSelection.rowCount()
             self.tableWidget_userSelection.insertRow(nrOfRows)
             
             addedItem = QTG.QTableWidgetItem()
             addedItem.setFlags(QTC.Qt.ItemIsEnabled)
             addedItem.setText(text)
-            self.tableWidget_userSelection.setItem(nrOfRows,0, addedItem )
+            self.tableWidget_userSelection.setItem(nrOfRows,0, addedItem)
             
+
+            minItem = QTG.QTableWidgetItem()
+            #minItem.setFlags(QTC.Qt.ItemIsEnabled)
+            minItem.setText(userMin)
+            self.tableWidget_userSelection.setItem(nrOfRows, 1, minItem)
+        
+            maxItem = QTG.QTableWidgetItem()
+            #minItem.setFlags(QTC.Qt.ItemIsEnabled)
+            maxItem.setText(userMax)
+            self.tableWidget_userSelection.setItem(nrOfRows, 2, maxItem)
+        
+            optItem = QTG.QTableWidgetItem()
+            optItem.setFlags(QTC.Qt.ItemIsEnabled)
+            optItem.setText(userOpt)
+            self.tableWidget_userSelection.setItem(nrOfRows, 3, optItem)
             
             removeItem = QTG.QTableWidgetItem()
             removeItem.setFlags(QTC.Qt.ItemIsEnabled)
@@ -311,6 +395,7 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
         self.tableWidget_overview.setColumnCount(1)
         self.tableWidget_overview.setHorizontalHeaderLabels([ 'Name'])
         self.tableWidget_overview.setRowCount(len(data))
+        self.tableWidget_overview.setWordWrap(True)
         
         for d,i in zip(data,range(len(data))):
             foodItem = QTG.QTableWidgetItem()
@@ -319,7 +404,8 @@ class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
             self.tableWidget_overview.setItem(i,0, foodItem )
             
         if init == 1:
-           self.tableWidget_overview.resizeColumnsToContents()
+            self.tableWidget_overview.resize(self.resolution.width()/3, self.resolution.width()/3)
+            self.tableWidget_overview.setColumnWidth(0, self.resolution.width()/3)
             
             
     def search(self):
@@ -447,7 +533,7 @@ class Optimizer(QTC.QThread):
     def run(self):
 
         db,cur = window.setupDB()
-        
+
         if window.radioButton_singleMeal.isChecked():
             N = 1 / 3.0
         elif window.radioButton_oneDay.isChecked():
@@ -495,9 +581,7 @@ class Optimizer(QTC.QThread):
         self.message.emit("blaaaa")
         
         
-        
-        
 app = QTG.QApplication(sys.argv)
 window = Window()
-window.show()
+window.showMaximized()
 sys.exit(app.exec_())
