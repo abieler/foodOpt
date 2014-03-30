@@ -488,25 +488,25 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
         protein_score = (PROTEIN - self.proteinIdeal)**2 + 1
         fat_score = (self.fatIdeal- FAT)**2 + 1
         
-        if (self.vitAIdeal > VIT_A):
+        if (self.vitAIdeal < VIT_A):
             vitA_score = (self.vitAIdeal - VIT_A)**2 + 1
         else:
-            vitA_score = 1
+            vitA_score = abs(self.vitAIdeal - VIT_A) + 1
             
-        if (self.B12Ideal > B12):
+        if (self.B12Ideal < B12):
             vitB12_score = (self.B12Ideal - B12)**2 + 1
         else:
-            vitB12_score = 1
+            vitB12_score = abs(self.B12Ideal - B12)**2 + 1
         
-        if (self.sodiumIdeal < SODIUM):
+        if (self.sodiumIdeal > SODIUM):
             sodium_score = (self.sodiumIdeal - SODIUM)**2 + 1
         else:
-            sodium_score = 1
+            sodium_score = abs(self.sodiumIdeal - SODIUM)**2 + 1
         
-        if (self.sugarIdeal < SUGAR):
+        if (self.sugarIdeal > SUGAR):
             sugar_score = (self.sugarIdeal - SUGAR)**2 + 1
         else:
-            sugar_score = 1
+            sugar_score = abs(self.sugarIdeal - SUGAR)**2 + 1
 
         score = energy_score * protein_score * fat_score * vitA_score * vitB12_score * sodium_score * sugar_score
         
