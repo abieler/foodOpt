@@ -12,7 +12,6 @@ from PySide import QtCore as QTC
 from PySide import QtGui as QTG
 
 from pyswarm_2 import apsa
-#import ui_foodOptimizer
 import ui_foodOptimizer
         
 #class Window(QTG.QWidget,ui_foodOptimizer.Ui_Form):
@@ -486,24 +485,26 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
         B12 = np.sum(additionalData[:,11] * x / 100)
         
         energy_score = (self.kcalIdeal - ENERGY_KCA)**2 + 1
-
         protein_score = (PROTEIN - self.proteinIdeal)**2 + 1
         fat_score = (self.fatIdeal- FAT)**2 + 1
         
-        if (self.vitAIdeal - VIT_A) < 0:
+        if (self.vitAIdeal > VIT_A):
             vitA_score = (self.vitAIdeal - VIT_A)**2 + 1
         else:
             vitA_score = 1
             
-        if (self.B12Ideal - B12) < 0:
+        if (self.B12Ideal > B12):
             vitB12_score = (self.B12Ideal - B12)**2 + 1
         else:
             vitB12_score = 1
-            
-        sodium_score = (self.sodiumIdeal - SODIUM)**2 + 1
         
-        if (self.sugarIdeal - SUGAR) < 0:
-            sugar_score = (self.sodiumIdeal - SODIUM)**2 + 1
+        if (self.sodiumIdeal < SODIUM):
+            sodium_score = (self.sodiumIdeal - SODIUM)**2 + 1
+        else:
+            sodium_score = 1
+        
+        if (self.sugarIdeal < SUGAR):
+            sugar_score = (self.sugarIdeal - SUGAR)**2 + 1
         else:
             sugar_score = 1
 
