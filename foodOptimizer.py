@@ -256,9 +256,9 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
     def plotOptimizedResult(self,msg):
 
         x = self.xopt
-        self.fatOpt, self.proteinOpt, self.energy_kcaOpt, self.charbohydrOpt,
-        self.charbohydr2Opt, self.sugarOpt, self.sodiumOpt, self.vit_aOpt,
-        self.b1Opt, self.b2Opt, self.b6Opt, self.b12Opt = 0, 0, 0, 0, 0, 0, 0,
+        self.fatOpt, self.proteinOpt, self.energy_kcaOpt, self.charbohydrOpt,\
+        self.charbohydr2Opt, self.sugarOpt, self.sodiumOpt, self.vit_aOpt,\
+        self.b1Opt, self.b2Opt, self.b6Opt, self.b12Opt = 0, 0, 0, 0, 0, 0, 0,\
         0, 0, 0, 0, 0
 
         nrOfRows = self.tableWidget_userSelection.rowCount()
