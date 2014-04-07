@@ -402,7 +402,9 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
             icon = QTG.QIcon('DeleteRed.png')
             removeItem.setIcon(icon)
             self.tableWidget_userSelection.setItem(nrOfRows, 4, removeItem )
-
+            
+            #self.tableWidget_userSelection.resizeRowsToContents()
+            self.tableWidget_userSelection.setColumnWidth(4, 28)
 
     def setupView(self,data,init=0):
 
