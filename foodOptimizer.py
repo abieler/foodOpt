@@ -234,7 +234,7 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
 
         try:
             self.mpl_widget.ax.plot(indices, finalResultOpt, 'or',
-            markersize=12)
+            markersize=12, label='opt')
         except Exception:
             pass
 
@@ -272,7 +272,7 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
             optAmount = x[k]
             foodItem = QTG.QTableWidgetItem()
             foodItem.setFlags(QTC.Qt.ItemIsEnabled)
-            foodItem.setText(str(optAmount))
+            foodItem.setText(str(round(optAmount,1)))
             self.tableWidget_userSelection.setItem(k, 3, foodItem)
 
             self.fatOpt += fat_i * optAmount / 100
@@ -409,19 +409,19 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
     def setupView(self,data,init=0):
 
         self.tableWidget_overview.setColumnCount(1)
-        self.tableWidget_overview.setHorizontalHeaderLabels([ 'Name'])
+        self.tableWidget_overview.setHorizontalHeaderLabels(['Produkt durch clicken hinzufuegen'])
         self.tableWidget_overview.setRowCount(len(data))
         self.tableWidget_overview.setWordWrap(True)
 
         for d,i in zip(data,range(len(data))):
             foodItem = QTG.QTableWidgetItem()
             foodItem.setFlags(QTC.Qt.ItemIsEnabled)
-            foodItem.setText(d[0].strip().replace('"',''))
-            self.tableWidget_overview.setItem(i,0, foodItem )
+            foodItem.setText(d[0].strip().replace('"', ''))
+            self.tableWidget_overview.setItem(i, 0, foodItem )
 
         if init == 1:
-            self.tableWidget_overview.resize(self.resolution.width()/3, self.resolution.width()/3)
-            self.tableWidget_overview.setColumnWidth(0, self.resolution.width()/3)
+            self.tableWidget_overview.resize(self.resolution.width() / 3, self.resolution.width() / 3)
+            self.tableWidget_overview.setColumnWidth(0, self.resolution.width() / 3)
 
 
     def search(self):
@@ -443,7 +443,7 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
         self.progress.setValue(int(finished))
 
 
-    def func(self,x, iteration, particleNr,additionalData):
+    def func(self, x, iteration, particleNr, additionalData):
 
         if iteration % (self.optimizer_thread.maxIterations / 50) == 0:
             self.message1.emit(iteration / 1000 * 100)
@@ -455,18 +455,18 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
         CHARBOHYD2 = np.sum(additionalData[:,4] * x)
         SUGAR = np.sum(additionalData[:,5] * x)
         SODIUM = np.sum(additionalData[:,6] * x / 100)
-        VIT_A = np.sum(additionalData[:,7] * x / 10**5)
+        VIT_A = np.sum(additionalData[:,7] * x / 10 ** 5)
         B1 = np.sum(additionalData[:,8] * x)
         B2 = np.sum(additionalData[:,9] * x)
         B6 = np.sum(additionalData[:,10] * x)
         B12 = np.sum(additionalData[:,11] * x / 100)
 
-        energy_score = (self.kcalIdeal - ENERGY_KCA)**2 + 1
-        protein_score = (PROTEIN - self.proteinIdeal)**2 + 1
-        fat_score = (self.fatIdeal - FAT)**2 + 1
+        energy_score = (self.kcalIdeal - ENERGY_KCA) ** 2 + 1
+        protein_score = (PROTEIN - self.proteinIdeal) ** 2 + 1
+        fat_score = (self.fatIdeal - FAT) ** 2 + 1
 
         if (self.vitAIdeal < VIT_A):
-            vitA_score = (self.vitAIdeal - VIT_A)**2 + 1
+            vitA_score = (self.vitAIdeal - VIT_A) ** 2 + 1
         else:
             vitA_score = abs(self.vitAIdeal - VIT_A) + 1
 
