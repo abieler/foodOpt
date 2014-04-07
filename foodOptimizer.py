@@ -90,9 +90,15 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
 
     def add_menu_options(self):
 
-        self.menuFile.addAction('save data', self.save_clicked)
-        self.menuFile.addAction('load data', self.load_clicked)
-        self.menuFile.addAction('settings...', self.settings_clicked)
+        self.menuFile.addAction(QTG.QIcon('icons/Save.png'),'Save',
+            self.save_clicked, QTG.QKeySequence("Ctrl+S"))
+        
+        self.menuFile.addAction(QTG.QIcon('icons/Open-icon.png'),
+            'Open', self.load_clicked, QTG.QKeySequence("Ctrl+O"))
+        
+        self.menuFile.addAction(QTG.QIcon('icons/preferences.png'),
+            'Preferences          ', self.settings_clicked,
+            QTG.QKeySequence("Ctrl+Alt+P"))
 
 
     def settings_clicked(self):
@@ -399,7 +405,7 @@ class Window(QTG.QMainWindow, ui_foodOptimizer.Ui_MainWindow):
             removeItem = QTG.QTableWidgetItem()
             removeItem.setFlags(QTC.Qt.ItemIsEnabled)
             #removeItem.setText('entfernen')
-            icon = QTG.QIcon('DeleteRed.png')
+            icon = QTG.QIcon('icons/DeleteRed.png')
             removeItem.setIcon(icon)
             self.tableWidget_userSelection.setItem(nrOfRows, 4, removeItem )
             
