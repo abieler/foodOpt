@@ -2,7 +2,7 @@
 
 # Form implementation generated from reading ui file 'ui_foodOptimizer.ui'
 #
-# Created: Sun Mar 30 18:49:52 2014
+# Created: Sun Apr  6 22:35:13 2014
 #      by: pyside-uic 0.2.14 running on PySide 1.1.2
 #
 # WARNING! All changes made in this file will be lost!
@@ -21,10 +21,10 @@ class Ui_MainWindow(object):
         self.tabWidget.setObjectName("tabWidget")
         self.tab = QtGui.QWidget()
         self.tab.setObjectName("tab")
-        self.verticalLayout_5 = QtGui.QVBoxLayout(self.tab)
+        self.verticalLayout_7 = QtGui.QVBoxLayout(self.tab)
+        self.verticalLayout_7.setObjectName("verticalLayout_7")
+        self.verticalLayout_5 = QtGui.QVBoxLayout()
         self.verticalLayout_5.setObjectName("verticalLayout_5")
-        self.verticalLayout = QtGui.QVBoxLayout()
-        self.verticalLayout.setObjectName("verticalLayout")
         self.horizontalLayout = QtGui.QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.comboBox_categories = QtGui.QComboBox(self.tab)
@@ -45,7 +45,7 @@ class Ui_MainWindow(object):
         self.pushButton_search.setMaximumSize(QtCore.QSize(1000000, 16777215))
         self.pushButton_search.setObjectName("pushButton_search")
         self.horizontalLayout.addWidget(self.pushButton_search)
-        self.verticalLayout.addLayout(self.horizontalLayout)
+        self.verticalLayout_5.addLayout(self.horizontalLayout)
         self.horizontalLayout_2 = QtGui.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         self.splitter_2 = QtGui.QSplitter(self.tab)
@@ -73,7 +73,15 @@ class Ui_MainWindow(object):
         self.mpl_widget.setSizePolicy(sizePolicy)
         self.mpl_widget.setMinimumSize(QtCore.QSize(200, 200))
         self.mpl_widget.setObjectName("mpl_widget")
-        self.tableWidget_userSelection = QtGui.QTableWidget(self.splitter_2)
+        self.widget = QtGui.QWidget(self.splitter_2)
+        self.widget.setObjectName("widget")
+        self.verticalLayout = QtGui.QVBoxLayout(self.widget)
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout.setObjectName("verticalLayout")
+        self.label = QtGui.QLabel(self.widget)
+        self.label.setObjectName("label")
+        self.verticalLayout.addWidget(self.label)
+        self.tableWidget_userSelection = QtGui.QTableWidget(self.widget)
         sizePolicy = QtGui.QSizePolicy(QtGui.QSizePolicy.MinimumExpanding, QtGui.QSizePolicy.MinimumExpanding)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -84,6 +92,7 @@ class Ui_MainWindow(object):
         self.tableWidget_userSelection.setObjectName("tableWidget_userSelection")
         self.tableWidget_userSelection.setColumnCount(0)
         self.tableWidget_userSelection.setRowCount(0)
+        self.verticalLayout.addWidget(self.tableWidget_userSelection)
         self.horizontalLayout_2.addWidget(self.splitter_2)
         self.verticalLayout_4 = QtGui.QVBoxLayout()
         self.verticalLayout_4.setObjectName("verticalLayout_4")
@@ -115,8 +124,8 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.addWidget(self.pushButton_startOptimization)
         self.verticalLayout_4.addWidget(self.frame)
         self.horizontalLayout_2.addLayout(self.verticalLayout_4)
-        self.verticalLayout.addLayout(self.horizontalLayout_2)
-        self.verticalLayout_5.addLayout(self.verticalLayout)
+        self.verticalLayout_5.addLayout(self.horizontalLayout_2)
+        self.verticalLayout_7.addLayout(self.verticalLayout_5)
         self.tabWidget.addTab(self.tab, "")
         self.tab_2 = QtGui.QWidget()
         self.tab_2.setObjectName("tab_2")
@@ -144,6 +153,7 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QtGui.QApplication.translate("MainWindow", "MainWindow", None, QtGui.QApplication.UnicodeUTF8))
         self.pushButton_search.setText(QtGui.QApplication.translate("MainWindow", "suchen", None, QtGui.QApplication.UnicodeUTF8))
+        self.label.setText(QtGui.QApplication.translate("MainWindow", "Auswahl", None, QtGui.QApplication.UnicodeUTF8))
         self.radioButton_singleMeal.setText(QtGui.QApplication.translate("MainWindow", "Einzelne Mahlzeit", None, QtGui.QApplication.UnicodeUTF8))
         self.radioButton_oneDay.setText(QtGui.QApplication.translate("MainWindow", "1 Tag", None, QtGui.QApplication.UnicodeUTF8))
         self.radioButton_sevenDays.setText(QtGui.QApplication.translate("MainWindow", "7 Tage", None, QtGui.QApplication.UnicodeUTF8))
